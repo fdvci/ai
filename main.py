@@ -8,11 +8,12 @@ import os
 from datetime import datetime, timedelta
 from pathlib import Path
 import logging
-from typing import Optional
-from agent import NovaAgent
-from core.self_mod import SelfModifier
+import atexit
+from typing import Optional, Any, Dict
+from contextlib import asynccontextmanager
+import weakref
 
-# Configure logging
+# Configure logging before any other imports
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -23,52 +24,131 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Global state
-nova: Optional[NovaAgent] = None
-orchestrator: Optional['NovaOrchestrator'] = None
-autonomy_active = True
-user_interface_active = True
-shutdown_event = threading.Event()
+# Import after logging setup to avoid circular imports
+from agent import NovaAgent
+from core.self_mod import SelfModifier
+
+# Global state with proper cleanup tracking
+_nova: Optional[NovaAgent] = None
+_orchestrator: Optional['NovaOrchestrator'] = None
+_shutdown_event = threading.Event()
+_cleanup_registry = weakref.WeakSet()
+
+# Thread-safe flags
+_autonomy_active = threading.Event()
+_user_interface_active = threading.Event()
+_autonomy_active.set()
+_user_interface_active.set()
+
+if sys.platform == "win32":
+    try:
+        # Set console to UTF-8 for Windows
+        os.system("chcp 65001 > nul")
+        # Set environment variable for UTF-8
+        os.environ["PYTHONIOENCODING"] = "utf-8"
+    except:
+        pass
+
+# Replace emoji characters with simple text for Windows compatibility
+import logging
+
+# Configure logging with Windows-safe formatting
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('data/nova.log', encoding='utf-8'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
+
+class AsyncExceptionHandler:
+    """Centralized exception handler for asyncio tasks"""
+    
+    def __init__(self):
+        self.exceptions = []
+        self.max_exceptions = 100
+    
+    def handle_exception(self, loop, context):
+        """Handle asyncio exceptions"""
+        exception = context.get('exception')
+        if exception:
+            self.exceptions.append({
+                'timestamp': datetime.now().isoformat(),
+                'exception': str(exception),
+                'context': context
+            })
+            
+            # Keep only recent exceptions
+            if len(self.exceptions) > self.max_exceptions:
+                self.exceptions = self.exceptions[-self.max_exceptions:]
+            
+            logger.error(f"Asyncio exception: {exception}", exc_info=exception)
+        else:
+            logger.error(f"Asyncio error: {context}")
 
 
 class NovaOrchestrator:
-    """Orchestrates all Nova components and processes"""
+    """Enhanced orchestrator with proper async handling"""
     
     def __init__(self):
+        self.startup_time = datetime.now()
+        self.health_check_interval = 300  # 5 minutes
+        self.last_health_check = datetime.now()
+        self.exception_handler = AsyncExceptionHandler()
+        
+        # Initialize components
         self.nova = NovaAgent()
         self.self_modifier = SelfModifier([
             "agent.py",
-            "core/autonomy.py",
+            "core/autonomy.py", 
             "core/self_mod.py",
             "memory/vector_memory.py",
             "utils/web.py"
         ])
-        self.startup_time = datetime.now()
-        self.health_check_interval = 300  # 5 minutes
-        self.last_health_check = datetime.now()
         
-    def startup_sequence(self):
-        """Execute startup sequence"""
-        logger.info("🚀 Nova startup sequence initiated")
+        # Async task management
+        self.background_tasks = set()
+        self.loop = None
         
-        # Check for restart state
-        self.check_restart_state()
+        # Register for cleanup
+        _cleanup_registry.add(self)
         
-        # Load and validate components
-        self.validate_components()
+    async def __aenter__(self):
+        """Async context manager entry"""
+        self.loop = asyncio.get_running_loop()
+        self.loop.set_exception_handler(self.exception_handler.handle_exception)
+        return self
         
-        # Check for pending evolutions
-        self.check_pending_evolutions()
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Async context manager exit with proper cleanup"""
+        await self.cleanup()
         
-        # Initialize async event loop for background tasks
-        self.setup_async_loop()
+    async def startup_sequence(self):
+        """Execute startup sequence asynchronously"""
+        logger.info("[STARTUP] Nova startup sequence initiated")
         
-        # Start health monitoring
-        self.start_health_monitoring()
-        
-        logger.info("✨ Nova is fully operational")
-        
-    def check_restart_state(self):
+        try:
+            # Check for restart state
+            await self.check_restart_state()
+            
+            # Validate components
+            self.validate_components()
+            
+            # Check for pending evolutions
+            await self.check_pending_evolutions()
+            
+            # Start background tasks
+            await self.start_background_tasks()
+            
+            logger.info("[SUCCESS] Nova is fully operational")
+            
+        except Exception as e:
+            logger.error(f"Startup failed: {e}", exc_info=True)
+            raise
+    
+    async def check_restart_state(self):
         """Check if this is a restart with pending state"""
         restart_state_file = "data/restart_state.json"
         if os.path.exists(restart_state_file):
@@ -98,60 +178,103 @@ class NovaOrchestrator:
                 logger.error(f"Component {name} failed to initialize")
                 raise RuntimeError(f"Component {name} initialization failed")
             else:
-                logger.info(f"✓ {name} initialized successfully")
+                logger.info(f"[OK] {name} initialized successfully")  # Changed from ✓
     
-    def check_pending_evolutions(self):
-        """Check and apply any pending evolutions"""
-        if os.path.exists("data/pending_evolution.json"):
-            logger.info("Found pending evolution plan, applying...")
+    async def start_background_tasks(self):
+        """Start background tasks with proper error handling"""
+        # Start autonomy loop
+        autonomy_task = asyncio.create_task(
+            self.autonomy_loop(),
+            name="autonomy_loop"
+        )
+        self.background_tasks.add(autonomy_task)
+        autonomy_task.add_done_callback(self.background_tasks.discard)
+        
+        # Start health monitoring
+        health_task = asyncio.create_task(
+            self.health_monitor_loop(),
+            name="health_monitor"
+        )
+        self.background_tasks.add(health_task)
+        health_task.add_done_callback(self.background_tasks.discard)
+        
+        # Start Nova's autonomous learning cycle
+        learning_task = asyncio.create_task(
+            self.nova.autonomous_learning_cycle(),
+            name="learning_cycle"
+        )
+        self.background_tasks.add(learning_task)
+        learning_task.add_done_callback(self.background_tasks.discard)
+        
+        logger.info("Background tasks started")
+    
+    async def autonomy_loop(self):
+        """Enhanced autonomy loop with proper async error recovery"""
+        consecutive_errors = 0
+        max_consecutive_errors = 3
+        
+        while not _shutdown_event.is_set() and _autonomy_active.is_set():
             try:
-                self.self_modifier.reflect_and_patch()
-                logger.info("Evolution applied successfully")
+                # Get autonomous action
+                result = await asyncio.get_running_loop().run_in_executor(
+                    None, self.nova.chat, "__autonomous__", True
+                )
+                
+                if result and isinstance(result, dict) and result.get("action") != "none":
+                    logger.info(f"🤖 Autonomous Action: {result['action']}")
+                    if result.get("content"):
+                        logger.info(f"   Content: {result['content'][:100]}...")
+                
+                # Reset error counter on success
+                consecutive_errors = 0
+                
+                # Dynamic delay based on action
+                delay = result.get("delay", 60) if isinstance(result, dict) else 60
+                delay = max(30, min(600, delay))  # Clamp between 30s and 10min
+                
+                # Wait with interruption capability
+                try:
+                    await asyncio.wait_for(
+                        _shutdown_event.wait(),
+                        timeout=delay
+                    )
+                    break  # Shutdown requested
+                except asyncio.TimeoutError:
+                    continue  # Normal timeout, continue loop
+                
+            except asyncio.CancelledError:
+                logger.info("Autonomy loop cancelled")
+                break
             except Exception as e:
-                logger.error(f"Error applying evolution: {e}")
+                consecutive_errors += 1
+                logger.error(f"Error in autonomy loop: {e}", exc_info=True)
+                
+                if consecutive_errors >= max_consecutive_errors:
+                    logger.error("Too many consecutive errors in autonomy loop, pausing...")
+                    await asyncio.sleep(300)  # Pause for 5 minutes
+                    consecutive_errors = 0
+                else:
+                    await asyncio.sleep(30)  # Short pause before retry
     
-    def setup_async_loop(self):
-        """Setup async event loop for background tasks"""
-        self.loop = asyncio.new_event_loop()
-        self.async_thread = threading.Thread(
-            target=self._run_async_loop,
-            daemon=True,
-            name="AsyncEventLoop"
-        )
-        self.async_thread.start()
-    
-    def _run_async_loop(self):
-        """Run the async event loop"""
-        asyncio.set_event_loop(self.loop)
-        try:
-            self.loop.run_until_complete(self.nova.autonomous_learning_cycle())
-        except Exception as e:
-            logger.error(f"Error in async loop: {e}")
-    
-    def start_health_monitoring(self):
-        """Start health monitoring thread"""
-        self.health_thread = threading.Thread(
-            target=self._health_monitor_loop,
-            daemon=True,
-            name="HealthMonitor"
-        )
-        self.health_thread.start()
-    
-    def _health_monitor_loop(self):
-        """Monitor system health"""
-        while not shutdown_event.is_set():
+    async def health_monitor_loop(self):
+        """Monitor system health asynchronously"""
+        while not _shutdown_event.is_set():
             try:
                 if (datetime.now() - self.last_health_check).seconds > self.health_check_interval:
-                    self.perform_health_check()
+                    await self.perform_health_check()
                     self.last_health_check = datetime.now()
                 
-                time.sleep(30)  # Check every 30 seconds
+                await asyncio.sleep(30)  # Check every 30 seconds
                 
+            except asyncio.CancelledError:
+                logger.info("Health monitor cancelled")
+                break
             except Exception as e:
-                logger.error(f"Error in health monitor: {e}")
+                logger.error(f"Error in health monitor: {e}", exc_info=True)
+                await asyncio.sleep(60)  # Wait before retry
     
-    def perform_health_check(self):
-        """Perform comprehensive health check"""
+    async def perform_health_check(self):
+        """Perform comprehensive health check asynchronously"""
         health_report = {
             "timestamp": datetime.now().isoformat(),
             "uptime": str(datetime.now() - self.startup_time),
@@ -161,13 +284,15 @@ class NovaOrchestrator:
         }
         
         try:
-            # Check memory usage
-            memory_stats = self.nova.vector_memory.get_memory_stats()
+            # Check memory usage in thread pool
+            memory_stats = await asyncio.get_running_loop().run_in_executor(
+                None, self.nova.vector_memory.get_memory_stats
+            )
             health_report["metrics"]["total_memories"] = memory_stats["total_memories"]
             health_report["metrics"]["memory_health"] = memory_stats["memory_health"]
             
             # Check agent metrics
-            health_report["metrics"]["agent_metrics"] = self.nova.metrics
+            health_report["metrics"]["agent_metrics"] = self.nova.metrics.__dict__
             
             # Check autonomy state
             health_report["components"]["autonomy"] = {
@@ -179,84 +304,94 @@ class NovaOrchestrator:
             if memory_stats["total_memories"] > 10000:
                 health_report["warnings"].append("Memory approaching capacity limits")
             
-            if self.nova.metrics.get("failed_queries", 0) > self.nova.metrics.get("successful_queries", 0) * 0.2:
+            failed_queries = self.nova.metrics.__dict__.get("failed_queries", 0)
+            successful_queries = self.nova.metrics.__dict__.get("successful_queries", 0)
+            if failed_queries > successful_queries * 0.2:
                 health_report["warnings"].append("High query failure rate detected")
             
             # Log health report
-            logger.info(f"Health check: {json.dumps(health_report, indent=2)}")
+            logger.info(f"Health check completed: {len(health_report['warnings'])} warnings")
             
             # Save health report
             health_file = f"data/health_reports/health_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
             os.makedirs(os.path.dirname(health_file), exist_ok=True)
-            with open(health_file, "w") as f:
-                json.dump(health_report, f, indent=2)
+            
+            def save_report():
+                with open(health_file, "w") as f:
+                    json.dump(health_report, f, indent=2)
+            
+            await asyncio.get_running_loop().run_in_executor(None, save_report)
             
             # Take corrective actions if needed
             if health_report["warnings"]:
-                self.handle_health_warnings(health_report["warnings"])
+                await self.handle_health_warnings(health_report["warnings"])
                 
         except Exception as e:
-            logger.error(f"Error performing health check: {e}")
+            logger.error(f"Error performing health check: {e}", exc_info=True)
     
-    def handle_health_warnings(self, warnings: list):
+    async def handle_health_warnings(self, warnings: list):
         """Handle health warnings with corrective actions"""
         for warning in warnings:
-            if "Memory approaching capacity" in warning:
-                # Trigger memory consolidation
-                logger.warning("Triggering memory consolidation due to capacity warning")
-                self.nova.consolidate_memories()
+            try:
+                if "Memory approaching capacity" in warning:
+                    # Trigger memory consolidation in thread pool
+                    logger.warning("Triggering memory consolidation due to capacity warning")
+                    await asyncio.get_running_loop().run_in_executor(
+                        None, self.nova.consolidate_memories
+                    )
+                    
+                    # Clean up old memories
+                    deleted = await asyncio.get_running_loop().run_in_executor(
+                        None, self.nova.vector_memory.cleanup_old_memories, 30
+                    )
+                    logger.info(f"Cleaned up {deleted} old memories")
                 
-                # Clean up old memories
-                deleted = self.nova.vector_memory.cleanup_old_memories(days=30)
-                logger.info(f"Cleaned up {deleted} old memories")
-            
-            elif "High query failure rate" in warning:
-                # Trigger behavior optimization
-                logger.warning("Triggering optimization due to high failure rate")
-                self.nova.autonomy.meta_thought()  # Trigger reflection
-
-
-def autonomy_loop():
-    """Enhanced autonomy loop with error recovery"""
-    consecutive_errors = 0
-    max_consecutive_errors = 3
+                elif "High query failure rate" in warning:
+                    # Trigger behavior optimization
+                    logger.warning("Triggering optimization due to high failure rate")
+                    await asyncio.get_running_loop().run_in_executor(
+                        None, self.nova.autonomy.meta_thought
+                    )
+            except Exception as e:
+                logger.error(f"Error handling warning '{warning}': {e}")
     
-    while autonomy_active and not shutdown_event.is_set():
+    async def cleanup(self):
+        """Cleanup all resources"""
+        logger.info("Starting orchestrator cleanup...")
+        
+        # Cancel all background tasks
+        for task in self.background_tasks:
+            if not task.done():
+                task.cancel()
+        
+        # Wait for tasks to complete with timeout
+        if self.background_tasks:
+            try:
+                await asyncio.wait_for(
+                    asyncio.gather(*self.background_tasks, return_exceptions=True),
+                    timeout=10.0
+                )
+            except asyncio.TimeoutError:
+                logger.warning("Some background tasks didn't finish in time")
+        
+        # Save state
         try:
-            # Get autonomous action
-            result = nova.chat("__autonomous__", structured=True)
-            
-            if result and isinstance(result, dict) and result.get("action") != "none":
-                logger.info(f"🤖 Autonomous Action: {result['action']}")
-                if result.get("content"):
-                    logger.info(f"   Content: {result['content'][:100]}...")
-            
-            # Reset error counter on success
-            consecutive_errors = 0
-            
-            # Dynamic delay based on action
-            delay = result.get("delay", 60) if isinstance(result, dict) else 60
-            delay = max(30, min(600, delay))  # Clamp between 30s and 10min
-            
-            # Wait with interruption capability
-            shutdown_event.wait(delay)
-            
+            await asyncio.get_running_loop().run_in_executor(
+                None, self.nova.save_brain
+            )
+            await asyncio.get_running_loop().run_in_executor(
+                None, self.nova.save_state
+            )
         except Exception as e:
-            consecutive_errors += 1
-            logger.error(f"Error in autonomy loop: {e}")
-            
-            if consecutive_errors >= max_consecutive_errors:
-                logger.error("Too many consecutive errors in autonomy loop, pausing...")
-                time.sleep(300)  # Pause for 5 minutes
-                consecutive_errors = 0
-            else:
-                time.sleep(30)  # Short pause before retry
+            logger.error(f"Error saving state during cleanup: {e}")
+        
+        logger.info("Orchestrator cleanup completed")
 
 
-def user_input_loop():
-    """Enhanced user interaction loop"""
+async def user_input_loop():
+    """Enhanced user interaction loop with proper async handling"""
     print("\n" + "="*50)
-    print("✨ Welcome to Nova - Your Autonomous AI Assistant")
+    print("[NOVA] Welcome to Nova - Your Autonomous AI Assistant")  # Changed from ✨
     print("="*50)
     print("\nCommands:")
     print("  'exit' or 'quit' - Shutdown Nova")
@@ -267,40 +402,45 @@ def user_input_loop():
     
     conversation_context = []
     
-    while user_interface_active and not shutdown_event.is_set():
+    while _user_interface_active.is_set() and not _shutdown_event.is_set():
         try:
-            # Show prompt with context awareness
-            prompt = "You: " if nova.speaker == "unknown" else f"{nova.speaker}: "
-            user_input = input(prompt).strip()
+            # Get user input in thread pool to avoid blocking
+            prompt = "You: " if _nova.speaker == "unknown" else f"{_nova.speaker}: "
+            user_input = await asyncio.get_running_loop().run_in_executor(
+                None, input, prompt
+            )
+            user_input = user_input.strip()
             
             if not user_input:
                 continue
             
             # Handle special commands
             if user_input.lower() in ['exit', 'quit']:
-                handle_shutdown()
+                await handle_shutdown()
                 break
             
             elif user_input.lower() == 'status':
-                show_status()
+                await show_status()
                 continue
             
             elif user_input.lower() == 'export':
-                export_data()
+                await export_data()
                 continue
             
             elif user_input.lower() == 'help':
                 show_help()
                 continue
             
-            # Regular conversation
+            # Regular conversation - run in thread pool
             conversation_context.append(user_input)
             
             # Show thinking indicator for complex queries
             if any(word in user_input.lower() for word in ['analyze', 'research', 'explain', 'complex']):
-                print("Nova: 🤔 Thinking deeply about this...")
+                print("Nova: [THINKING] Processing your request...")  # Changed from 🤔
             
-            response = nova.chat(user_input)
+            response = await asyncio.get_running_loop().run_in_executor(
+                None, _nova.chat, user_input
+            )
             
             print(f"\nNova: {response}\n")
             
@@ -311,51 +451,59 @@ def user_input_loop():
                 conversation_context = conversation_context[-20:]
             
         except KeyboardInterrupt:
-            print("\n\n⚠️  Interrupted. Type 'exit' to shutdown properly.")
+            print("\n\n[WARNING] Interrupted. Type 'exit' to shutdown properly.")  # Changed from ⚠️
         except EOFError:
-            handle_shutdown()
+            await handle_shutdown()
             break
         except Exception as e:
-            logger.error(f"Error in user input loop: {e}")
+            logger.error(f"Error in user input loop: {e}", exc_info=True)
             print(f"\nNova: I encountered an error: {str(e)}. Let me try to recover...\n")
 
-
-def show_status():
-    """Show Nova's current status"""
+async def show_status():
+    """Show Nova's current status asynchronously"""
     print("\n" + "="*50)
     print("📊 Nova Status Report")
     print("="*50)
     
     try:
+        # Get status in thread pool
+        status = await asyncio.get_running_loop().run_in_executor(
+            None, _nova.get_status_report
+        )
+        
         # Basic info
-        print(f"Speaker: {nova.speaker}")
-        print(f"Exchange Count: {nova.exchange_count}")
-        print(f"Total Memories: {len(nova.brain)}")
+        agent_info = status.get("agent_info", {})
+        print(f"Speaker: {agent_info.get('speaker', 'unknown')}")
+        print(f"Exchange Count: {agent_info.get('exchange_count', 0)}")
+        print(f"Total Memories: {agent_info.get('total_memories', 0)}")
         
         # Metrics
+        metrics = status.get("metrics", {})
         print(f"\nMetrics:")
-        for key, value in nova.metrics.items():
+        for key, value in metrics.items():
             print(f"  {key}: {value}")
         
         # Autonomy state
+        autonomy = status.get("autonomy_status", {})
         print(f"\nAutonomy:")
-        print(f"  Last Action: {nova.autonomy.last_action}")
-        print(f"  Curiosity Level: {nova.autonomy.curiosity_level:.2f}")
-        print(f"  Active Goals: {len([g for g in nova.autonomy.current_goals if g.get('status') == 'active'])}")
+        print(f"  Last Action: {autonomy.get('last_action', 'none')}")
+        print(f"  Curiosity Level: {autonomy.get('curiosity_level', 0):.2f}")
+        print(f"  Active Goals: {autonomy.get('active_goals', 0)}")
         
         # Memory stats
-        memory_stats = nova.vector_memory.get_memory_stats()
+        memory_stats = status.get("memory_stats", {})
         print(f"\nMemory Statistics:")
-        print(f"  Total Vector Memories: {memory_stats['total_memories']}")
-        print(f"  Memory Health Score: {memory_stats['memory_health']['diversity_score']:.2f}")
+        print(f"  Recent Memories: {memory_stats.get('recent_count', 0)}")
         
-        # Uptime
-        if orchestrator:
-            uptime = datetime.now() - orchestrator.startup_time
-            print(f"\nSystem:")
+        # System health
+        system = status.get("system_health", {})
+        print(f"\nSystem:")
+        if _orchestrator:
+            uptime = datetime.now() - _orchestrator.startup_time
             print(f"  Uptime: {str(uptime).split('.')[0]}")
         
     except Exception as e:
+        logger.error(f"Error displaying status: {e}")
         print(f"Error displaying status: {e}")
     
     print("="*50 + "\n")
@@ -385,115 +533,101 @@ def show_help():
     print("="*50 + "\n")
 
 
-def export_data():
-    """Export Nova's memories and knowledge"""
-    print("\n📦 Exporting Nova's knowledge...")
+async def export_data():
+    """Export Nova's memories and knowledge asynchronously"""
+    print("\n[EXPORT] Exporting Nova's knowledge...")
     
     try:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         export_dir = f"data/exports/nova_export_{timestamp}"
-        os.makedirs(export_dir, exist_ok=True)
         
-        # Export memories
-        nova.save_brain()
-        memory_export = f"{export_dir}/memories.json"
-        with open(nova.brain_file, "r") as src:
-            with open(memory_export, "w") as dst:
-                dst.write(src.read())
+        # Run export in thread pool
+        def do_export():
+            os.makedirs(export_dir, exist_ok=True)
+            
+            # Export memories
+            _nova.save_brain()
+            memory_export = f"{export_dir}/memories.json"
+            with open(_nova.brain_file, "r") as src:
+                with open(memory_export, "w") as dst:
+                    dst.write(src.read())
+            
+            # Export vector memories
+            vector_export = f"{export_dir}/vector_memories.json"
+            _nova.vector_memory.export_memories(vector_export)
+            
+            # Export state
+            state_export = f"{export_dir}/agent_state.json"
+            _nova.save_state()
+            with open(_nova.state_file, "r") as src:
+                with open(state_export, "w") as dst:
+                    dst.write(src.read())
+            
+            # Export autonomy data
+            autonomy_export = {
+                "goals": _nova.autonomy.current_goals,
+                "insights": _nova.autonomy.insights,
+                "prompt_rules": _nova.autonomy.prompt_rules,
+                "meta_state": _nova.autonomy.meta_state
+            }
+            with open(f"{export_dir}/autonomy.json", "w") as f:
+                json.dump(autonomy_export, f, indent=2)
+            
+            # Export knowledge graph
+            graph_export = f"{export_dir}/knowledge_graph.json"
+            graph = _nova.export_knowledge_graph()
+            with open(graph_export, "w") as f:
+                json.dump(graph, f, indent=2)
+            
+            return export_dir
         
-        # Export vector memories
-        vector_export = f"{export_dir}/vector_memories.json"
-        nova.vector_memory.export_memories(vector_export)
+        export_path = await asyncio.get_running_loop().run_in_executor(None, do_export)
         
-        # Export state
-        state_export = f"{export_dir}/agent_state.json"
-        nova.save_state()
-        with open(nova.state_file, "r") as src:
-            with open(state_export, "w") as dst:
-                dst.write(src.read())
-        
-        # Export autonomy data
-        autonomy_export = {
-            "goals": nova.autonomy.current_goals,
-            "insights": nova.autonomy.insights,
-            "prompt_rules": nova.autonomy.prompt_rules,
-            "meta_state": nova.autonomy.meta_state
-        }
-        with open(f"{export_dir}/autonomy.json", "w") as f:
-            json.dump(autonomy_export, f, indent=2)
-        
-        # Export knowledge graph
-        graph_export = f"{export_dir}/knowledge_graph.json"
-        graph = nova.export_knowledge_graph()
-        with open(graph_export, "w") as f:
-            json.dump(graph, f, indent=2)
-        
-        # Create summary
-        summary = {
-            "export_timestamp": datetime.now().isoformat(),
-            "nova_version": "1.0",
-            "total_memories": len(nova.brain),
-            "vector_memories": nova.vector_memory.stats["total_memories"],
-            "known_users": list(nova.state["known_users"].keys()),
-            "active_goals": len([g for g in nova.autonomy.current_goals if g.get("status") == "active"]),
-            "total_insights": len(nova.autonomy.insights),
-            "uptime": str(datetime.now() - orchestrator.startup_time) if orchestrator else "Unknown"
-        }
-        
-        with open(f"{export_dir}/summary.json", "w") as f:
-            json.dump(summary, f, indent=2)
-        
-        print(f"✅ Export complete! Files saved to: {export_dir}")
-        print(f"   - Total memories: {summary['total_memories']}")
-        print(f"   - Vector memories: {summary['vector_memories']}")
-        print(f"   - Active goals: {summary['active_goals']}")
+        print(f"[SUCCESS] Export complete! Files saved to: {export_path}")
         
     except Exception as e:
-        logger.error(f"Error during export: {e}")
-        print(f"❌ Export failed: {str(e)}")
+        logger.error(f"Error during export: {e}", exc_info=True)
+        print(f"[ERROR] Export failed: {str(e)}")
 
 
-def handle_shutdown():
+async def handle_shutdown():
     """Gracefully shutdown Nova and clean up resources"""
-    global user_interface_active, autonomy_active
+    global _nova, _orchestrator
     
     logger.info("Initiating graceful shutdown...")
-    print("\n🔄 Shutting down Nova gracefully...")
+    print("\n[SHUTDOWN] Shutting down Nova gracefully..")
     
-    # Stop all loops
-    user_interface_active = False
-    autonomy_active = False
-    shutdown_event.set()
+    # Signal shutdown to all components
+    _shutdown_event.set()
+    _user_interface_active.clear()
+    _autonomy_active.clear()
     
     try:
-        # Save current state
-        if nova:
-            print("💾 Saving memories and state...")
-            nova.save_brain()
-            nova.save_state()
-            logger.info("Nova state saved successfully")
+        # Cleanup orchestrator if it exists
+        if _orchestrator:
+            await _orchestrator.cleanup()
         
-        # Wait for threads to finish (with timeout)
-        if orchestrator:
-            print("⏳ Waiting for background processes...")
-            # Give threads time to finish gracefully
-            time.sleep(2)
-        
-        print("✅ Shutdown complete")
+        print("[SUCCESS] Shutdown complete")
         logger.info("Nova shutdown completed successfully")
         
     except Exception as e:
-        logger.error(f"Error during shutdown: {e}")
-        print(f"⚠️ Warning: Error during shutdown: {e}")
+        logger.error(f"Error during shutdown: {e}", exc_info=True)
+        print(f"Warning: Error during shutdown: {e}")
     
-    print("\n👋 Nova has been shut down. Goodbye!")
-    sys.exit(0)
+    print("\n[GOODBYE] Nova has been shut down. Goodbye")
 
 
 def signal_handler(signum, frame):
     """Handle system signals for graceful shutdown"""
     logger.info(f"Received signal {signum}")
-    handle_shutdown()
+    
+    # If event loop is running, schedule shutdown coroutine
+    try:
+        loop = asyncio.get_running_loop()
+        loop.create_task(handle_shutdown())
+    except RuntimeError:
+        # No event loop running, exit directly
+        sys.exit(0)
 
 
 def create_directories():
@@ -512,45 +646,47 @@ def create_directories():
             raise
 
 
-def main():
-    """Main entry point with enhanced error handling"""
-    global nova, orchestrator
+@asynccontextmanager
+async def nova_application():
+    """Main application context manager"""
+    global _nova, _orchestrator
     
     try:
-        # Set up signal handlers for graceful shutdown
-        signal.signal(signal.SIGINT, signal_handler)
-        signal.signal(signal.SIGTERM, signal_handler)
-        
-        # Create necessary directories
+        # Create directories
         create_directories()
         
         # Initialize orchestrator and Nova
         print("🚀 Initializing Nova AI...")
-        orchestrator = NovaOrchestrator()
-        nova = orchestrator.nova
-        
-        # Run startup sequence
-        orchestrator.startup_sequence()
-        
-        # Start autonomy loop in background
-        autonomy_thread = threading.Thread(
-            target=autonomy_loop,
-            daemon=True,
-            name="AutonomyLoop"
-        )
-        autonomy_thread.start()
-        logger.info("Autonomy loop started")
-        
-        # Wait a moment for everything to initialize
-        time.sleep(1)
-        
-        # Start user interaction loop (blocking)
-        user_input_loop()
-        
+        async with NovaOrchestrator() as orchestrator:
+            _orchestrator = orchestrator
+            _nova = orchestrator.nova
+            
+            # Run startup sequence
+            await orchestrator.startup_sequence()
+            
+            yield orchestrator
+            
+    except Exception as e:
+        logger.error(f"Fatal error in Nova application: {e}", exc_info=True)
+        raise
+
+
+async def main():
+    """Main entry point with proper async structure"""
+    # Set up signal handlers for graceful shutdown
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+    
+    # Register cleanup function
+    atexit.register(lambda: logger.info("Process exiting"))
+    
+    try:
+        async with nova_application() as orchestrator:
+            # Start user interaction loop
+            await user_input_loop()
+            
     except KeyboardInterrupt:
         logger.info("Keyboard interrupt received")
-        handle_shutdown()
-        
     except Exception as e:
         logger.error(f"Fatal error in main: {e}", exc_info=True)
         print(f"\n❌ Fatal error: {str(e)}")
@@ -558,10 +694,14 @@ def main():
         
         # Emergency save
         try:
-            if nova:
+            if _nova:
                 print("🆘 Attempting emergency save...")
-                nova.save_brain()
-                nova.save_state()
+                await asyncio.get_running_loop().run_in_executor(
+                    None, _nova.save_brain
+                )
+                await asyncio.get_running_loop().run_in_executor(
+                    None, _nova.save_state
+                )
                 print("📝 Emergency save completed")
         except Exception as save_error:
             logger.error(f"Emergency save failed: {save_error}")
@@ -571,4 +711,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        asyncio.run(main(), debug=False)
+    except KeyboardInterrupt:
+        print("\n👋 Goodbye!")
+    except Exception as e:
+        logger.error(f"Failed to start Nova: {e}", exc_info=True)
+        sys.exit(1)

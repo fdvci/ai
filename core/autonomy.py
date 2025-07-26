@@ -9,8 +9,8 @@ from utils.web import search_web, extract_plain_answer
 from openai import OpenAI
 from dotenv import load_dotenv
 import logging
+from dataclasses import dataclass
 
-# Create Memory as dataclass in this file or import from types module
 @dataclass
 class Memory:
     id: str
@@ -142,9 +142,13 @@ class NovaAutonomy:
         
         # Update confidence based on success rate
         if hasattr(self.agent, 'metrics'):
-            total_queries = self.agent.metrics.get("successful_queries", 0) + self.agent.metrics.get("failed_queries", 0)
+            # Use the new get method or direct attribute access
+            successful_queries = getattr(self.agent.metrics, 'successful_queries', 0)
+            failed_queries = getattr(self.agent.metrics, 'failed_queries', 0)
+            total_queries = successful_queries + failed_queries
+            
             if total_queries > 0:
-                success_rate = self.agent.metrics["successful_queries"] / total_queries
+                success_rate = successful_queries / total_queries
                 self.meta_state["confidence"] = 0.5 + (success_rate * 0.5)
         
         # Update learning momentum

@@ -1,6 +1,6 @@
 {
-  "last_active": "2025-07-27T01:03:53.110407",
-  "total_conversations": 11,
+  "last_active": "2025-07-27T02:08:22.005815",
+  "total_conversations": 0,
   "known_users": {
     "nova": {
       "first_seen": "2025-07-25T23:41:05.529183",
@@ -9,5 +9,16 @@
     }
   },
   "interests": [],
-  "goals": []
+  "goals": [],
+  "personality_traits": {
+    "curiosity": 0.7,
+    "helpfulness": 0.9,
+    "analytical": 0.8,
+    "creativity": 0.6
+  },
+  "preferences": {
+    "detailed_responses": true,
+    "ask_follow_up_questions": true,
+    "show_reasoning": false
+  }
 }
