@@ -1,0 +1,31 @@
+{
+  "timestamp": "2025-07-25T23:44:51.567287",
+  "uptime": "0:05:30.007941",
+  "components": {
+    "autonomy": {
+      "last_action": "optimize",
+      "meta_state": {
+        "confidence": 1.0,
+        "energy": 1.0,
+        "focus_area": null,
+        "learning_momentum": 0.0,
+        "last_reflection": "2025-07-25T23:39:21.061676"
+      }
+    }
+  },
+  "metrics": {
+    "total_memories": 16,
+    "memory_health": {
+      "total_memories": 16,
+      "diversity_score": 0.2,
+      "avg_memories_per_type": 3.2
+    },
+    "agent_metrics": {
+      "successful_queries": 4,
+      "failed_queries": 0,
+      "learning_events": 0,
+      "self_modifications": 0
+    }
+  },
+  "warnings": []
+}

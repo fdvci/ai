@@ -1,0 +1,37 @@
+# Core dependencies
+openai>=1.0.0
+python-dotenv>=1.0.0
+requests>=2.31.0
+aiohttp>=3.9.0
+numpy>=1.24.0
+
+# Vector database and embeddings
+chromadb>=0.4.0
+
+# Web scraping and parsing
+beautifulsoup4>=4.12.0
+html5lib>=1.1
+
+# Machine learning and analysis
+scikit-learn>=1.3.0
+
+# Async support
+asyncio>=3.4.3
+
+# Logging and monitoring
+colorlog>=6.7.0
+
+# Data processing
+pandas>=2.0.0
+
+# Optional but recommended
+tiktoken>=0.5.0  # For token counting
+tenacity>=8.2.0  # For retry logic
+pydantic>=2.0.0  # For data validation
+
+# Development dependencies (optional)
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.0.0

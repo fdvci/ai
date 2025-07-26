@@ -1,0 +1,9 @@
+{
+  "total_memories": 26,
+  "memories_by_type": {
+    "general": 26
+  },
+  "last_cleanup": null,
+  "query_count": 8,
+  "avg_query_time": 0.343806875
+}
