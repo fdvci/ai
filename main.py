@@ -49,20 +49,6 @@ if sys.platform == "win32":
     except:
         pass
 
-# Replace emoji characters with simple text for Windows compatibility
-import logging
-
-# Configure logging with Windows-safe formatting
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('data/nova.log', encoding='utf-8'),
-        logging.StreamHandler(sys.stdout)
-    ]
-)
-
-
 class AsyncExceptionHandler:
     """Centralized exception handler for asyncio tasks"""
     

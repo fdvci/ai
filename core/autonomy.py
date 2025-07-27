@@ -9,7 +9,6 @@ from utils.web import search_web, extract_plain_answer
 from openai import OpenAI
 from dotenv import load_dotenv
 import logging
-from dataclasses import dataclass
 from utils.common import model_supports_json
 
 @dataclass
@@ -308,19 +307,19 @@ class NovaAutonomy:
         
         try:
             
-            model_name = "gpt-4"  # or wherever you store the model
+            model_name = "gpt-4"  # or whichever model you prefer
+            # Use the memory_summary we assembled earlier for reflection
             messages = [
                 {"role": "system", "content": "You are Nova..."},
-                {"role": "user", "content": user_input}
+                {"role": "user", "content": memory_summary}
             ]
 
             kwargs = {"model": model_name, "messages": messages}
-
+            # If the model supports JSON responses, request JSON
             if model_supports_json(model_name):
                 kwargs["response_format"] = "json_object"
 
             response = client.chat.completions.create(**kwargs)
-            
             reflection = response.choices[0].message.content.strip()
             
             # Store reflection as insight
