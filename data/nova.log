@@ -60,3 +60,21 @@ AttributeError: 'NovaOrchestrator' object has no attribute 'check_pending_evolut
 2025-07-27 02:08:22,641 - agent - WARNING - Save brain called during shutdown, skipping
 2025-07-27 02:08:22,642 - agent - WARNING - Save state called during shutdown, skipping
 2025-07-27 02:08:22,642 - agent - INFO - Nova agent shutdown complete
+2025-07-27 02:34:06,334 - agent - INFO - [OK] Vector memory initialized
+2025-07-27 02:34:06,343 - agent - INFO - Loaded 34 memories from brain
+2025-07-27 02:34:06,351 - agent - INFO - [OK] Brain and state loaded
+2025-07-27 02:34:07,675 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-27 02:34:07,698 - agent - INFO - [OK] OpenAI client initialized and tested
+2025-07-27 02:34:07,701 - agent - INFO - [OK] Autonomy and self-modification initialized
+2025-07-27 02:34:07,702 - __main__ - INFO - [STARTUP] Nova startup sequence initiated
+2025-07-27 02:34:07,702 - __main__ - INFO - [OK] Agent initialized successfully
+2025-07-27 02:34:07,702 - __main__ - INFO - [OK] Vector Memory initialized successfully
+2025-07-27 02:34:07,703 - __main__ - INFO - [OK] Autonomy initialized successfully
+2025-07-27 02:34:07,703 - __main__ - INFO - [OK] Self Modifier initialized successfully
+2025-07-27 02:34:07,703 - __main__ - INFO - No pending evolutions found.
+2025-07-27 02:34:07,704 - __main__ - INFO - Background tasks started
+2025-07-27 02:34:07,704 - __main__ - INFO - [SUCCESS] Nova is fully operational
+2025-07-27 02:34:07,709 - agent - INFO - Starting autonomous learning cycle
+2025-07-27 02:34:26,024 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-27 02:34:26,329 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 400 Bad Request"
+2025-07-27 02:34:26,331 - core.autonomy - ERROR - Error optimizing prompt rules: Error code: 400 - {'error': {'message': "Invalid parameter: 'response_format' of type 'json_object' is not supported with this model.", 'type': 'invalid_request_error', 'param': 'response_format', 'code': None}}

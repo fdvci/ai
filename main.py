@@ -90,7 +90,32 @@ class AsyncExceptionHandler:
 
 
 class NovaOrchestrator:
-    """Enhanced orchestrator with proper async handling"""
+
+    async def check_pending_evolutions(self):
+        """Check and apply any pending evolution plans."""
+        try:
+            # Load any pending evolution plan from data/pending_evolution.json
+            plan = self.self_modifier.load_evolution_plan()
+            if not plan:
+                logger.info("No pending evolutions found.")
+                return
+
+            logger.info("[EVOLUTION] Pending evolution detected; applying plan…")
+            # Apply the plan in a background thread
+            results = await asyncio.get_running_loop().run_in_executor(
+                None, self.self_modifier.apply_evolution_plan, plan
+            )
+            for result in results:
+                if result.get("success"):
+                    logger.info(
+                        f"Applied evolution to {result['file']}: {result['description']}"
+                    )
+                else:
+                    logger.error(
+                        f"Failed to apply evolution to {result['file']}: {result.get('error')}"
+                    )
+        except Exception as e:
+            logger.error(f"Error while applying pending evolutions: {e}", exc_info=True)
     
     def __init__(self):
         self.startup_time = datetime.now()
