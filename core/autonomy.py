@@ -10,6 +10,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import logging
 from dataclasses import dataclass
+from utils.common import model_supports_json
 
 @dataclass
 class Memory:
@@ -306,11 +307,19 @@ class NovaAutonomy:
         ]
         
         try:
-            response = client.chat.completions.create(
-                model="gpt-4",
-                messages=prompt,
-                temperature=0.8
-            )
+            
+            model_name = "gpt-4"  # or wherever you store the model
+            messages = [
+                {"role": "system", "content": "You are Nova..."},
+                {"role": "user", "content": user_input}
+            ]
+
+            kwargs = {"model": model_name, "messages": messages}
+
+            if model_supports_json(model_name):
+                kwargs["response_format"] = "json_object"
+
+            response = client.chat.completions.create(**kwargs)
             
             reflection = response.choices[0].message.content.strip()
             
