@@ -142,9 +142,8 @@ class NovaAutonomy:
         
         # Update confidence based on success rate
         if hasattr(self.agent, 'metrics'):
-            # Use the new get method or direct attribute access
-            successful_queries = getattr(self.agent.metrics, 'successful_queries', 0)
-            failed_queries = getattr(self.agent.metrics, 'failed_queries', 0)
+            successful_queries = self.agent.metrics.successful_queries
+            failed_queries = self.agent.metrics.failed_queries
             total_queries = successful_queries + failed_queries
             
             if total_queries > 0:

@@ -33,10 +33,11 @@ class Memory:
 logger = logging.getLogger(__name__)
 
 class VectorMemory:
-    def __init__(self, persist_directory: str = "data/vector_db"):
-        """Initialize vector memory with persistence and advanced features"""
+    def __init__(self, persist_directory: str = "data/vector_db", max_memories: int = 50000):
+        """Initialize vector memory with persistence and bounds checking"""
         self.persist_directory = Path(persist_directory)
         self.persist_directory.mkdir(parents=True, exist_ok=True)
+        self.max_memories = max_memories
         
         # Initialize ChromaDB with persistence
         self.client = chromadb.PersistentClient(
@@ -48,10 +49,15 @@ class VectorMemory:
         )
         
         # Create embedding function
-        self.embedding_function = embedding_functions.OpenAIEmbeddingFunction(
-            api_key=os.getenv("OPENAI_API_KEY"),
-            model_name="text-embedding-ada-002"
-        )
+        try:
+            self.embedding_function = embedding_functions.OpenAIEmbeddingFunction(
+                api_key=os.getenv("OPENAI_API_KEY"),
+                model_name="text-embedding-ada-002"
+            )
+        except Exception as e:
+            logger.error(f"Failed to initialize OpenAI embeddings: {e}")
+            # Fallback to default embeddings if OpenAI fails
+            self.embedding_function = embedding_functions.DefaultEmbeddingFunction()
         
         # Create collections for different memory types
         self.collections = {
@@ -64,6 +70,24 @@ class VectorMemory:
         
         # Memory statistics
         self.stats = self.load_stats()
+        
+        # Check memory limits on init - CALL THE METHOD HERE
+        self._check_memory_limits()
+
+    def _check_memory_limits(self):
+        """Check and enforce memory limits"""
+        try:
+            total_memories = sum(
+                collection.count() for collection in self.collections.values()
+            )
+            
+            if total_memories > self.max_memories:
+                logger.warning(f"Memory limit exceeded: {total_memories}/{self.max_memories}")
+                # Trigger cleanup
+                deleted = self.cleanup_old_memories(days=30)
+                logger.info(f"Cleaned up {deleted} old memories")
+        except Exception as e:
+            logger.error(f"Error checking memory limits: {e}")
         
     def _get_or_create_collection(self, name: str):
         """Get or create a collection with error handling"""
@@ -103,9 +127,14 @@ class VectorMemory:
             json.dump(self.stats, f, indent=2)
     
     def store(self, text: str, memory_id: str, memory_type: str = "general", 
-              metadata: Optional[Dict[str, Any]] = None):
-        """Store memory with type-specific collection and metadata"""
+          metadata: Optional[Dict[str, Any]] = None):
+        """Store memory with type-specific collection, metadata, and bounds checking"""
         try:
+            # Check memory limits before storing
+            if self.get_total_memory_count() >= self.max_memories:
+                logger.warning("Memory limit reached, triggering cleanup")
+                self.cleanup_old_memories(days=7)  # Aggressive cleanup
+            
             # Select appropriate collection
             collection_type = memory_type if memory_type in self.collections else "general"
             collection = self.collections[collection_type]
@@ -135,6 +164,18 @@ class VectorMemory:
             
             logger.debug(f"Stored memory {memory_id} of type {memory_type}")
             
+        except Exception as e:
+            logger.error(f"Error storing memory: {e}")
+            raise MemoryError(f"Failed to store memory {memory_id}: {e}")
+
+    def get_total_memory_count(self) -> int:
+        """Get total count of memories across all collections"""
+        try:
+            return sum(collection.count() for collection in self.collections.values())
+        except Exception as e:
+            logger.error(f"Error counting memories: {e}")
+            return 0
+                
         except Exception as e:
             logger.error(f"Error storing memory: {e}")
     

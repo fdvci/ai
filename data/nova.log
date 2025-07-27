@@ -166,3 +166,220 @@ AttributeError: 'NovaOrchestrator' object has no attribute 'check_pending_evolut
 2025-07-27 03:22:11,554 - __main__ - INFO - Background tasks started
 2025-07-27 03:22:11,555 - __main__ - INFO - [SUCCESS] Nova is fully operational
 2025-07-27 03:22:11,559 - agent - INFO - Starting autonomous learning cycle
+2025-07-27 14:17:54,733 - agent - INFO - [OK] Vector memory initialized
+2025-07-27 14:17:54,743 - agent - INFO - Loaded 34 memories from brain
+2025-07-27 14:17:54,750 - agent - INFO - [OK] Brain and state loaded
+2025-07-27 14:17:57,962 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-27 14:17:57,985 - agent - INFO - [OK] OpenAI client initialized and tested
+2025-07-27 14:17:58,006 - agent - INFO - [OK] Autonomy and self-modification initialized
+2025-07-27 14:17:58,007 - __main__ - INFO - [STARTUP] Nova startup sequence initiated
+2025-07-27 14:17:58,007 - __main__ - INFO - [OK] Agent initialized successfully
+2025-07-27 14:17:58,007 - __main__ - INFO - [OK] Vector Memory initialized successfully
+2025-07-27 14:17:58,007 - __main__ - INFO - [OK] Autonomy initialized successfully
+2025-07-27 14:17:58,008 - __main__ - INFO - [OK] Self Modifier initialized successfully
+2025-07-27 14:17:58,008 - __main__ - INFO - No pending evolutions found.
+2025-07-27 14:17:58,008 - __main__ - INFO - Background tasks started with error recovery
+2025-07-27 14:17:58,009 - __main__ - INFO - [SUCCESS] Nova is fully operational
+2025-07-27 14:17:58,013 - agent - INFO - Starting autonomous learning cycle
+2025-07-27 14:17:58,013 - agent - ERROR - Error in autonomous learning cycle: Event.wait() takes 1 positional argument but 2 were given
+Traceback (most recent call last):
+  File "C:\Users\tessa\Documents\fdv\ai\agent.py", line 744, in autonomous_learning_cycle
+    if self._shutdown_event.wait(300):  # Wait 5 minutes or until shutdown
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: Event.wait() takes 1 positional argument but 2 were given
+2025-07-27 14:17:58,015 - __main__ - ERROR - Error in learning_cycle (attempt 1/3): Event.wait() takes 1 positional argument but 2 were given
+2025-07-27 14:17:58,016 - __main__ - ERROR - Asyncio exception: name 'random' is not defined
+Traceback (most recent call last):
+  File "C:\Users\tessa\Documents\fdv\ai\agent.py", line 744, in autonomous_learning_cycle
+    if self._shutdown_event.wait(300):  # Wait 5 minutes or until shutdown
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: Event.wait() takes 1 positional argument but 2 were given
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\tessa\Documents\fdv\ai\main.py", line 86, in safe_background_task
+    await task_func(*args, **kwargs)
+  File "C:\Users\tessa\Documents\fdv\ai\agent.py", line 795, in autonomous_learning_cycle
+    if not self._shutdown_event.wait(60):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: Event.wait() takes 1 positional argument but 2 were given
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\tessa\Documents\fdv\ai\main.py", line 103, in safe_background_task
+    delay = base_delay * (2 ** (retry_count - 1)) + random.uniform(0, 1)
+                                                    ^^^^^^
+NameError: name 'random' is not defined
+2025-07-27 14:21:31,467 - agent - INFO - [OK] Vector memory initialized
+2025-07-27 14:21:31,468 - agent - INFO - Loaded 34 memories from brain
+2025-07-27 14:21:31,469 - agent - INFO - [OK] Brain and state loaded
+2025-07-27 14:21:32,715 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-27 14:21:32,727 - agent - INFO - [OK] OpenAI client initialized and tested
+2025-07-27 14:21:32,729 - agent - INFO - [OK] Autonomy and self-modification initialized
+2025-07-27 14:21:32,730 - __main__ - INFO - [STARTUP] Nova startup sequence initiated
+2025-07-27 14:21:32,730 - __main__ - INFO - [OK] Agent initialized successfully
+2025-07-27 14:21:32,730 - __main__ - INFO - [OK] Vector Memory initialized successfully
+2025-07-27 14:21:32,731 - __main__ - INFO - [OK] Autonomy initialized successfully
+2025-07-27 14:21:32,731 - __main__ - INFO - [OK] Self Modifier initialized successfully
+2025-07-27 14:21:32,731 - __main__ - INFO - No pending evolutions found.
+2025-07-27 14:21:32,731 - __main__ - INFO - Background tasks started with error recovery
+2025-07-27 14:21:32,732 - __main__ - INFO - [SUCCESS] Nova is fully operational
+2025-07-27 14:21:32,735 - agent - INFO - Starting autonomous learning cycle
+2025-07-27 14:21:32,735 - agent - ERROR - Error in autonomous learning cycle: Event.wait() takes 1 positional argument but 2 were given
+Traceback (most recent call last):
+  File "C:\Users\tessa\Documents\fdv\ai\agent.py", line 744, in autonomous_learning_cycle
+    if self._shutdown_event.wait(300):  # Wait 5 minutes or until shutdown
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: Event.wait() takes 1 positional argument but 2 were given
+2025-07-27 14:23:11,326 - agent - INFO - [OK] Vector memory initialized
+2025-07-27 14:23:11,327 - agent - INFO - Loaded 34 memories from brain
+2025-07-27 14:23:11,327 - agent - INFO - [OK] Brain and state loaded
+2025-07-27 14:23:12,764 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-27 14:23:12,773 - agent - INFO - [OK] OpenAI client initialized and tested
+2025-07-27 14:23:12,775 - agent - INFO - [OK] Autonomy and self-modification initialized
+2025-07-27 14:23:12,775 - __main__ - INFO - [STARTUP] Nova startup sequence initiated
+2025-07-27 14:23:12,775 - __main__ - INFO - [OK] Agent initialized successfully
+2025-07-27 14:23:12,775 - __main__ - INFO - [OK] Vector Memory initialized successfully
+2025-07-27 14:23:12,776 - __main__ - INFO - [OK] Autonomy initialized successfully
+2025-07-27 14:23:12,776 - __main__ - INFO - [OK] Self Modifier initialized successfully
+2025-07-27 14:23:12,776 - __main__ - INFO - No pending evolutions found.
+2025-07-27 14:23:12,776 - __main__ - INFO - Background tasks started with error recovery
+2025-07-27 14:23:12,776 - __main__ - INFO - [SUCCESS] Nova is fully operational
+2025-07-27 14:23:12,779 - agent - INFO - Starting autonomous learning cycle
+2025-07-27 14:30:41,962 - agent - INFO - [OK] Vector memory initialized
+2025-07-27 14:30:41,963 - agent - INFO - Loaded 34 memories from brain
+2025-07-27 14:30:41,963 - agent - INFO - [OK] Brain and state loaded
+2025-07-27 14:30:43,520 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-27 14:30:43,531 - agent - INFO - [OK] OpenAI client initialized and tested
+2025-07-27 14:30:43,532 - agent - INFO - [OK] Autonomy and self-modification initialized
+2025-07-27 14:30:43,533 - __main__ - INFO - [STARTUP] Nova startup sequence initiated
+2025-07-27 14:30:43,533 - __main__ - INFO - [OK] Agent initialized successfully
+2025-07-27 14:30:43,533 - __main__ - INFO - [OK] Vector Memory initialized successfully
+2025-07-27 14:30:43,533 - __main__ - INFO - [OK] Autonomy initialized successfully
+2025-07-27 14:30:43,534 - __main__ - INFO - [OK] Self Modifier initialized successfully
+2025-07-27 14:30:43,534 - __main__ - INFO - No pending evolutions found.
+2025-07-27 14:30:43,534 - __main__ - INFO - Background tasks started with error recovery
+2025-07-27 14:30:43,534 - __main__ - INFO - [SUCCESS] Nova is fully operational
+2025-07-27 14:30:43,537 - agent - INFO - Starting autonomous learning cycle
+2025-07-27 14:31:58,309 - agent - INFO - [OK] Vector memory initialized
+2025-07-27 14:31:58,310 - agent - INFO - Loaded 34 memories from brain
+2025-07-27 14:31:58,311 - agent - INFO - [OK] Brain and state loaded
+2025-07-27 14:31:59,689 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-27 14:31:59,698 - agent - INFO - [OK] OpenAI client initialized and tested
+2025-07-27 14:31:59,700 - agent - INFO - [OK] Autonomy and self-modification initialized
+2025-07-27 14:31:59,700 - __main__ - INFO - [STARTUP] Nova startup sequence initiated
+2025-07-27 14:31:59,701 - __main__ - INFO - [OK] Agent initialized successfully
+2025-07-27 14:31:59,701 - __main__ - INFO - [OK] Vector Memory initialized successfully
+2025-07-27 14:31:59,701 - __main__ - INFO - [OK] Autonomy initialized successfully
+2025-07-27 14:31:59,701 - __main__ - INFO - [OK] Self Modifier initialized successfully
+2025-07-27 14:31:59,701 - __main__ - INFO - No pending evolutions found.
+2025-07-27 14:31:59,702 - __main__ - INFO - Background tasks started with error recovery
+2025-07-27 14:31:59,702 - __main__ - INFO - [SUCCESS] Nova is fully operational
+2025-07-27 14:31:59,705 - agent - INFO - Starting autonomous learning cycle
+2025-07-27 14:40:40,862 - agent - INFO - [OK] Vector memory initialized
+2025-07-27 14:40:40,863 - agent - INFO - Loaded 34 memories from brain
+2025-07-27 14:40:40,864 - agent - INFO - [OK] Brain and state loaded
+2025-07-27 14:40:42,026 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-27 14:40:42,038 - agent - INFO - [OK] OpenAI client initialized and tested
+2025-07-27 14:40:42,040 - agent - INFO - [OK] Autonomy and self-modification initialized
+2025-07-27 14:40:42,040 - __main__ - INFO - [STARTUP] Nova startup sequence initiated
+2025-07-27 14:40:42,041 - __main__ - INFO - [OK] Agent initialized successfully
+2025-07-27 14:40:42,041 - __main__ - INFO - [OK] Vector Memory initialized successfully
+2025-07-27 14:40:42,041 - __main__ - INFO - [OK] Autonomy initialized successfully
+2025-07-27 14:40:42,041 - __main__ - INFO - [OK] Self Modifier initialized successfully
+2025-07-27 14:40:42,041 - __main__ - INFO - No pending evolutions found.
+2025-07-27 14:40:42,042 - __main__ - ERROR - Startup failed: 'NovaAgent' object has no attribute 'autonomous_learning_cycle'
+Traceback (most recent call last):
+  File "C:\Users\tessa\Documents\fdv\ai\main.py", line 189, in startup_sequence
+    await self.start_background_tasks()
+  File "C:\Users\tessa\Documents\fdv\ai\main.py", line 252, in start_background_tasks
+    safe_background_task(self.nova.autonomous_learning_cycle, "learning_cycle"),
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NovaAgent' object has no attribute 'autonomous_learning_cycle'
+2025-07-27 14:40:42,044 - __main__ - INFO - Starting orchestrator cleanup...
+2025-07-27 14:40:42,046 - agent - ERROR - Error saving state: 'NovaAgent' object has no attribute '_lock'
+Traceback (most recent call last):
+  File "C:\Users\tessa\Documents\fdv\ai\agent.py", line 377, in save_state
+    with self._lock:
+         ^^^^^^^^^^
+AttributeError: 'NovaAgent' object has no attribute '_lock'
+2025-07-27 14:40:42,069 - __main__ - INFO - Orchestrator cleanup completed
+2025-07-27 14:40:42,070 - __main__ - ERROR - Fatal error in Nova application: 'NovaAgent' object has no attribute 'autonomous_learning_cycle'
+Traceback (most recent call last):
+  File "C:\Users\tessa\Documents\fdv\ai\main.py", line 726, in nova_application
+    await orchestrator.startup_sequence()
+  File "C:\Users\tessa\Documents\fdv\ai\main.py", line 189, in startup_sequence
+    await self.start_background_tasks()
+  File "C:\Users\tessa\Documents\fdv\ai\main.py", line 252, in start_background_tasks
+    safe_background_task(self.nova.autonomous_learning_cycle, "learning_cycle"),
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NovaAgent' object has no attribute 'autonomous_learning_cycle'
+2025-07-27 14:40:42,071 - __main__ - ERROR - Fatal error in main: 'NovaAgent' object has no attribute 'autonomous_learning_cycle'
+Traceback (most recent call last):
+  File "C:\Users\tessa\Documents\fdv\ai\main.py", line 745, in main
+    async with nova_application() as orchestrator:
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.11_3.11.2544.0_x64__qbz5n2kfra8p0\Lib\contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tessa\Documents\fdv\ai\main.py", line 726, in nova_application
+    await orchestrator.startup_sequence()
+  File "C:\Users\tessa\Documents\fdv\ai\main.py", line 189, in startup_sequence
+    await self.start_background_tasks()
+  File "C:\Users\tessa\Documents\fdv\ai\main.py", line 252, in start_background_tasks
+    safe_background_task(self.nova.autonomous_learning_cycle, "learning_cycle"),
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NovaAgent' object has no attribute 'autonomous_learning_cycle'
+2025-07-27 14:40:42,075 - agent - ERROR - Error saving state: 'NovaAgent' object has no attribute '_lock'
+Traceback (most recent call last):
+  File "C:\Users\tessa\Documents\fdv\ai\agent.py", line 377, in save_state
+    with self._lock:
+         ^^^^^^^^^^
+AttributeError: 'NovaAgent' object has no attribute '_lock'
+2025-07-27 14:40:42,113 - __main__ - INFO - Process exiting
+2025-07-27 14:42:02,877 - agent - INFO - [OK] Vector memory initialized
+2025-07-27 14:42:02,878 - agent - INFO - Loaded 34 memories from brain
+2025-07-27 14:42:02,878 - agent - INFO - [OK] Brain and state loaded
+2025-07-27 14:42:04,038 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-27 14:42:04,049 - agent - INFO - [OK] OpenAI client initialized and tested
+2025-07-27 14:42:04,050 - agent - INFO - [OK] Autonomy and self-modification initialized
+2025-07-27 14:42:04,051 - __main__ - INFO - [STARTUP] Nova startup sequence initiated
+2025-07-27 14:42:04,051 - __main__ - INFO - [OK] Agent initialized successfully
+2025-07-27 14:42:04,051 - __main__ - INFO - [OK] Vector Memory initialized successfully
+2025-07-27 14:42:04,051 - __main__ - INFO - [OK] Autonomy initialized successfully
+2025-07-27 14:42:04,052 - __main__ - INFO - [OK] Self Modifier initialized successfully
+2025-07-27 14:42:04,052 - __main__ - INFO - No pending evolutions found.
+2025-07-27 14:42:04,052 - __main__ - INFO - Background tasks started with error recovery
+2025-07-27 14:42:04,053 - __main__ - INFO - [SUCCESS] Nova is fully operational
+2025-07-27 14:42:04,056 - agent - INFO - Starting autonomous learning cycle
+2025-07-27 14:42:31,386 - agent - INFO - [OK] Vector memory initialized
+2025-07-27 14:42:31,387 - agent - INFO - Loaded 34 memories from brain
+2025-07-27 14:42:31,387 - agent - INFO - [OK] Brain and state loaded
+2025-07-27 14:42:32,955 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-27 14:42:32,964 - agent - INFO - [OK] OpenAI client initialized and tested
+2025-07-27 14:42:32,964 - agent - INFO - [OK] Autonomy and self-modification initialized
+2025-07-27 14:42:32,964 - __main__ - INFO - [STARTUP] Nova startup sequence initiated
+2025-07-27 14:42:32,964 - __main__ - INFO - [OK] Agent initialized successfully
+2025-07-27 14:42:32,965 - __main__ - INFO - [OK] Vector Memory initialized successfully
+2025-07-27 14:42:32,965 - __main__ - INFO - [OK] Autonomy initialized successfully
+2025-07-27 14:42:32,965 - __main__ - INFO - [OK] Self Modifier initialized successfully
+2025-07-27 14:42:32,965 - __main__ - INFO - No pending evolutions found.
+2025-07-27 14:42:32,965 - __main__ - INFO - Background tasks started with error recovery
+2025-07-27 14:42:32,966 - __main__ - INFO - [SUCCESS] Nova is fully operational
+2025-07-27 14:42:32,968 - agent - INFO - Starting autonomous learning cycle
+2025-07-27 23:54:51,828 - agent - INFO - [OK] Vector memory initialized
+2025-07-27 23:54:51,840 - agent - INFO - Loaded 34 memories from brain
+2025-07-27 23:54:51,851 - agent - INFO - [OK] Brain and state loaded
+2025-07-27 23:54:55,435 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-27 23:54:55,459 - agent - INFO - [OK] OpenAI client initialized and tested
+2025-07-27 23:54:55,478 - agent - INFO - [OK] Autonomy and self-modification initialized
+2025-07-27 23:54:55,478 - __main__ - INFO - [STARTUP] Nova startup sequence initiated
+2025-07-27 23:54:55,479 - __main__ - INFO - [OK] Agent initialized successfully
+2025-07-27 23:54:55,479 - __main__ - INFO - [OK] Vector Memory initialized successfully
+2025-07-27 23:54:55,480 - __main__ - INFO - [OK] Autonomy initialized successfully
+2025-07-27 23:54:55,480 - __main__ - INFO - [OK] Self Modifier initialized successfully
+2025-07-27 23:54:55,480 - __main__ - INFO - No pending evolutions found.
+2025-07-27 23:54:55,480 - __main__ - INFO - Background tasks started with error recovery
+2025-07-27 23:54:55,480 - __main__ - INFO - [SUCCESS] Nova is fully operational
+2025-07-27 23:54:55,483 - agent - INFO - Starting autonomous learning cycle

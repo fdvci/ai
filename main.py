@@ -5,6 +5,7 @@ import sys
 import time
 import json
 import os
+import random
 from datetime import datetime, timedelta
 from pathlib import Path
 import logging
@@ -74,6 +75,40 @@ class AsyncExceptionHandler:
         else:
             logger.error(f"Asyncio error: {context}")
 
+            
+async def safe_background_task(task_func, task_name: str, *args, **kwargs):
+    """Wrapper for background tasks with error recovery"""
+    retry_count = 0
+    max_retries = 3
+    base_delay = 1
+    
+    while retry_count < max_retries and not _shutdown_event.is_set():
+        try:
+            await task_func(*args, **kwargs)
+            retry_count = 0  # Reset on success
+            return  # Task completed successfully
+            
+        except asyncio.CancelledError:
+            logger.info(f"{task_name} cancelled")
+            break
+            
+        except Exception as e:
+            retry_count += 1
+            logger.error(f"Error in {task_name} (attempt {retry_count}/{max_retries}): {e}")
+            
+            if retry_count >= max_retries:
+                logger.critical(f"{task_name} failed {max_retries} times, stopping")
+                break
+            
+            # Exponential backoff with jitter
+            delay = base_delay * (2 ** (retry_count - 1)) + random.uniform(0, 1)
+            logger.info(f"Retrying {task_name} in {delay:.1f}s...")
+            
+            try:
+                await asyncio.wait_for(_shutdown_event.wait(), timeout=delay)
+                break  # Shutdown requested during delay
+            except asyncio.TimeoutError:
+                continue  # Normal timeout, retry
 
 class NovaOrchestrator:
 
@@ -193,31 +228,34 @@ class NovaOrchestrator:
     
     async def start_background_tasks(self):
         """Start background tasks with proper error handling"""
-        # Start autonomy loop
+        # Initialize async components in Nova
+        await self.nova.initialize_async_components()
+        
+        # Start autonomy loop with error recovery
         autonomy_task = asyncio.create_task(
-            self.autonomy_loop(),
+            safe_background_task(self.autonomy_loop, "autonomy_loop"),
             name="autonomy_loop"
         )
         self.background_tasks.add(autonomy_task)
         autonomy_task.add_done_callback(self.background_tasks.discard)
         
-        # Start health monitoring
+        # Start health monitoring with error recovery
         health_task = asyncio.create_task(
-            self.health_monitor_loop(),
+            safe_background_task(self.health_monitor_loop, "health_monitor"),
             name="health_monitor"
         )
         self.background_tasks.add(health_task)
         health_task.add_done_callback(self.background_tasks.discard)
         
-        # Start Nova's autonomous learning cycle
+        # Start Nova's autonomous learning cycle with error recovery
         learning_task = asyncio.create_task(
-            self.nova.autonomous_learning_cycle(),
+            safe_background_task(self.nova.autonomous_learning_cycle, "learning_cycle"),
             name="learning_cycle"
         )
         self.background_tasks.add(learning_task)
         learning_task.add_done_callback(self.background_tasks.discard)
         
-        logger.info("Background tasks started")
+        logger.info("Background tasks started with error recovery")
     
     async def autonomy_loop(self):
         """Enhanced autonomy loop with proper async error recovery"""
@@ -402,7 +440,7 @@ class NovaOrchestrator:
 async def user_input_loop():
     """Enhanced user interaction loop with proper async handling"""
     print("\n" + "="*50)
-    print("[NOVA] Welcome to Nova - Your Autonomous AI Assistant")  # Changed from ✨
+    print("[NOVA] Welcome to Nova - Your Autonomous AI Assistant")
     print("="*50)
     print("\nCommands:")
     print("  'exit' or 'quit' - Shutdown Nova")
@@ -415,18 +453,30 @@ async def user_input_loop():
     
     while _user_interface_active.is_set() and not _shutdown_event.is_set():
         try:
-            # Get user input in thread pool to avoid blocking
+            # Get user input with a shorter timeout to check for shutdown
             prompt = "You: " if _nova.speaker == "unknown" else f"{_nova.speaker}: "
-            user_input = await asyncio.get_running_loop().run_in_executor(
-                None, input, prompt
-            )
+            
+            # Use a simpler input approach with timeout
+            try:
+                user_input = await asyncio.wait_for(
+                    asyncio.to_thread(input, prompt), 
+                    timeout=1.0
+                )
+            except asyncio.TimeoutError:
+                # Check if shutdown was requested
+                if _shutdown_event.is_set():
+                    break
+                continue
+            
             user_input = user_input.strip()
             
             if not user_input:
                 continue
             
             # Handle special commands
+            # Handle special commands
             if user_input.lower() in ['exit', 'quit']:
+                print("\n[SHUTDOWN] Initiating graceful shutdown...")
                 await handle_shutdown()
                 break
             
@@ -442,16 +492,14 @@ async def user_input_loop():
                 show_help()
                 continue
             
-            # Regular conversation - run in thread pool
+            # Regular conversation
             conversation_context.append(user_input)
             
             # Show thinking indicator for complex queries
             if any(word in user_input.lower() for word in ['analyze', 'research', 'explain', 'complex']):
-                print("Nova: [THINKING] Processing your request...")  # Changed from 🤔
+                print("Nova: [THINKING] Processing your request...")
             
-            response = await asyncio.get_running_loop().run_in_executor(
-                None, _nova.chat, user_input
-            )
+            response = await _nova.chat(user_input)
             
             print(f"\nNova: {response}\n")
             
@@ -462,7 +510,9 @@ async def user_input_loop():
                 conversation_context = conversation_context[-20:]
             
         except KeyboardInterrupt:
-            print("\n\n[WARNING] Interrupted. Type 'exit' to shutdown properly.")  # Changed from ⚠️
+            print("\n\n[WARNING] Interrupted. Type 'exit' to shutdown properly.")
+            await handle_shutdown()
+            break
         except EOFError:
             await handle_shutdown()
             break
@@ -606,7 +656,7 @@ async def handle_shutdown():
     global _nova, _orchestrator
     
     logger.info("Initiating graceful shutdown...")
-    print("\n[SHUTDOWN] Shutting down Nova gracefully..")
+    print("\n[SHUTDOWN] Shutting down Nova gracefully...")
     
     # Signal shutdown to all components
     _shutdown_event.set()
@@ -625,7 +675,7 @@ async def handle_shutdown():
         logger.error(f"Error during shutdown: {e}", exc_info=True)
         print(f"Warning: Error during shutdown: {e}")
     
-    print("\n[GOODBYE] Nova has been shut down. Goodbye")
+    print("\n[GOODBYE] Nova has been shut down. Goodbye!")
 
 
 def signal_handler(signum, frame):
