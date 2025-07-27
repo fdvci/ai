@@ -9,6 +9,7 @@ from chromadb.config import Settings
 import logging
 from pathlib import Path
 from datetime import datetime, timedelta
+from dataclasses import dataclass
 
 # Make sklearn optional:
 try:
@@ -16,6 +17,18 @@ try:
     HAS_SKLEARN = True
 except ImportError:
     HAS_SKLEARN = False
+
+@dataclass
+class Memory:
+    """Simple data container representing a single memory entry."""
+    id: str
+    timestamp: str
+    speaker: str
+    type: str
+    content: str
+    embedding_id: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
+
 
 logger = logging.getLogger(__name__)
 

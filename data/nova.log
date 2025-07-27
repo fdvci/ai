@@ -78,3 +78,43 @@ AttributeError: 'NovaOrchestrator' object has no attribute 'check_pending_evolut
 2025-07-27 02:34:26,024 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 2025-07-27 02:34:26,329 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 400 Bad Request"
 2025-07-27 02:34:26,331 - core.autonomy - ERROR - Error optimizing prompt rules: Error code: 400 - {'error': {'message': "Invalid parameter: 'response_format' of type 'json_object' is not supported with this model.", 'type': 'invalid_request_error', 'param': 'response_format', 'code': None}}
+2025-07-27 02:36:17,871 - agent - INFO - [OK] Vector memory initialized
+2025-07-27 02:36:17,872 - agent - INFO - Loaded 34 memories from brain
+2025-07-27 02:36:17,873 - agent - INFO - [OK] Brain and state loaded
+2025-07-27 02:36:20,321 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-27 02:36:20,333 - agent - INFO - [OK] OpenAI client initialized and tested
+2025-07-27 02:36:20,346 - agent - INFO - [OK] Autonomy and self-modification initialized
+2025-07-27 02:36:20,347 - __main__ - INFO - [STARTUP] Nova startup sequence initiated
+2025-07-27 02:36:20,347 - __main__ - INFO - [OK] Agent initialized successfully
+2025-07-27 02:36:20,348 - __main__ - INFO - [OK] Vector Memory initialized successfully
+2025-07-27 02:36:20,348 - __main__ - INFO - [OK] Autonomy initialized successfully
+2025-07-27 02:36:20,348 - __main__ - INFO - [OK] Self Modifier initialized successfully
+2025-07-27 02:36:20,349 - __main__ - INFO - No pending evolutions found.
+2025-07-27 02:36:20,349 - __main__ - INFO - Background tasks started
+2025-07-27 02:36:20,349 - __main__ - INFO - [SUCCESS] Nova is fully operational
+2025-07-27 02:36:20,354 - agent - INFO - Starting autonomous learning cycle
+2025-07-27 02:36:21,220 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-27 02:36:21,990 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-27 02:36:23,101 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-27 02:36:23,683 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-27 02:36:25,166 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-27 02:36:25,838 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-27 02:36:30,471 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-27 02:36:39,567 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-27 02:36:39,569 - core.autonomy - ERROR - Error during exploration: cannot import name 'Memory' from 'memory.vector_memory' (C:\Users\tessa\Documents\fdv\ai\memory\vector_memory.py)
+2025-07-27 02:47:32,026 - agent - INFO - [OK] Vector memory initialized
+2025-07-27 02:47:32,036 - agent - INFO - Loaded 34 memories from brain
+2025-07-27 02:47:32,043 - agent - INFO - [OK] Brain and state loaded
+2025-07-27 02:47:34,651 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-27 02:47:34,680 - agent - INFO - [OK] OpenAI client initialized and tested
+2025-07-27 02:47:34,699 - agent - INFO - [OK] Autonomy and self-modification initialized
+2025-07-27 02:47:34,700 - __main__ - INFO - [STARTUP] Nova startup sequence initiated
+2025-07-27 02:47:34,700 - __main__ - INFO - [OK] Agent initialized successfully
+2025-07-27 02:47:34,700 - __main__ - INFO - [OK] Vector Memory initialized successfully
+2025-07-27 02:47:34,700 - __main__ - INFO - [OK] Autonomy initialized successfully
+2025-07-27 02:47:34,701 - __main__ - INFO - [OK] Self Modifier initialized successfully
+2025-07-27 02:47:34,701 - __main__ - INFO - No pending evolutions found.
+2025-07-27 02:47:34,701 - __main__ - INFO - Background tasks started
+2025-07-27 02:47:34,702 - __main__ - INFO - [SUCCESS] Nova is fully operational
+2025-07-27 02:47:34,708 - agent - INFO - Starting autonomous learning cycle
+2025-07-27 02:47:52,043 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
