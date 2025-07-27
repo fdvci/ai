@@ -14,7 +14,6 @@ from typing import Optional, Any, Dict
 from contextlib import asynccontextmanager
 import weakref
 
-# Configure logging before any other imports
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -23,7 +22,7 @@ logging.basicConfig(
         logging.StreamHandler(sys.stdout)
     ]
 )
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)  
 
 # Import after logging setup to avoid circular imports
 from agent import NovaAgent
@@ -264,13 +263,11 @@ class NovaOrchestrator:
         
         while not _shutdown_event.is_set() and _autonomy_active.is_set():
             try:
-                # Get autonomous action
-                result = await asyncio.get_running_loop().run_in_executor(
-                    None, self.nova.chat, "__autonomous__", True
-                )
+                # Get autonomous action - await the async chat method
+                result = await self.nova.chat("__autonomous__", True)
                 
                 if result and isinstance(result, dict) and result.get("action") != "none":
-                    logger.info(f"🤖 Autonomous Action: {result['action']}")
+                    logger.info(f"[AUTO] Autonomous Action: {result['action']}")
                     if result.get("content"):
                         logger.info(f"   Content: {result['content'][:100]}...")
                 
@@ -284,13 +281,12 @@ class NovaOrchestrator:
                 # Wait with interruption capability
                 try:
                     await asyncio.wait_for(
-                        _shutdown_event.wait(),
+                        asyncio.sleep(delay),  # Use asyncio.sleep instead of event.wait()
                         timeout=delay
                     )
-                    break  # Shutdown requested
                 except asyncio.TimeoutError:
                     continue  # Normal timeout, continue loop
-                
+                    
             except asyncio.CancelledError:
                 logger.info("Autonomy loop cancelled")
                 break
@@ -406,7 +402,7 @@ class NovaOrchestrator:
     
     async def cleanup(self):
         """Cleanup all resources"""
-        logger.info("Starting orchestrator cleanup...")
+        logger.info("Starting orchestrator cleanup...")  # This logger is already imported at the top of main.py
         
         # Cancel all background tasks
         for task in self.background_tasks:
@@ -423,14 +419,12 @@ class NovaOrchestrator:
             except asyncio.TimeoutError:
                 logger.warning("Some background tasks didn't finish in time")
         
-        # Save state
+        # Save state - properly await these
         try:
-            await asyncio.get_running_loop().run_in_executor(
-                None, self.nova.save_brain
-            )
-            await asyncio.get_running_loop().run_in_executor(
-                None, self.nova.save_state
-            )
+            if hasattr(self.nova, 'save_brain'):
+                await self.nova.save_brain()
+            if hasattr(self.nova, 'save_state'):
+                await self.nova.save_state()
         except Exception as e:
             logger.error(f"Error saving state during cleanup: {e}")
         
@@ -451,74 +445,106 @@ async def user_input_loop():
     
     conversation_context = []
     
-    while _user_interface_active.is_set() and not _shutdown_event.is_set():
-        try:
-            # Get user input with a shorter timeout to check for shutdown
-            prompt = "You: " if _nova.speaker == "unknown" else f"{_nova.speaker}: "
-            
-            # Use a simpler input approach with timeout
+    # Use aioconsole for async input if available, otherwise use thread
+    try:
+        import aioconsole
+        
+        while _user_interface_active.is_set() and not _shutdown_event.is_set():
             try:
-                user_input = await asyncio.wait_for(
-                    asyncio.to_thread(input, prompt), 
-                    timeout=1.0
-                )
-            except asyncio.TimeoutError:
-                # Check if shutdown was requested
-                if _shutdown_event.is_set():
+                prompt = "You: " if _nova.speaker == "unknown" else f"{_nova.speaker}: "
+                user_input = await aioconsole.ainput(prompt)
+                
+                user_input = user_input.strip()
+                if not user_input:
+                    continue
+                
+                # Handle special commands
+                if user_input.lower() in ['exit', 'quit']:
+                    print("\n[SHUTDOWN] Initiating graceful shutdown...")
+                    await handle_shutdown()
                     break
-                continue
-            
-            user_input = user_input.strip()
-            
-            if not user_input:
-                continue
-            
-            # Handle special commands
-            # Handle special commands
-            if user_input.lower() in ['exit', 'quit']:
-                print("\n[SHUTDOWN] Initiating graceful shutdown...")
+                
+                elif user_input.lower() == 'status':
+                    await show_status()
+                    continue
+                
+                elif user_input.lower() == 'export':
+                    await export_data()
+                    continue
+                
+                elif user_input.lower() == 'help':
+                    show_help()
+                    continue
+                
+                # Regular conversation
+                response = await _nova.chat(user_input)
+                print(f"\nNova: {response}\n")
+                
+            except KeyboardInterrupt:
+                print("\n\n[WARNING] Interrupted. Type 'exit' to shutdown properly.")
                 await handle_shutdown()
                 break
-            
-            elif user_input.lower() == 'status':
-                await show_status()
-                continue
-            
-            elif user_input.lower() == 'export':
-                await export_data()
-                continue
-            
-            elif user_input.lower() == 'help':
-                show_help()
-                continue
-            
-            # Regular conversation
-            conversation_context.append(user_input)
-            
-            # Show thinking indicator for complex queries
-            if any(word in user_input.lower() for word in ['analyze', 'research', 'explain', 'complex']):
-                print("Nova: [THINKING] Processing your request...")
-            
-            response = await _nova.chat(user_input)
-            
-            print(f"\nNova: {response}\n")
-            
-            conversation_context.append(response)
-            
-            # Keep context window manageable
-            if len(conversation_context) > 20:
-                conversation_context = conversation_context[-20:]
-            
-        except KeyboardInterrupt:
-            print("\n\n[WARNING] Interrupted. Type 'exit' to shutdown properly.")
-            await handle_shutdown()
-            break
-        except EOFError:
-            await handle_shutdown()
-            break
-        except Exception as e:
-            logger.error(f"Error in user input loop: {e}", exc_info=True)
-            print(f"\nNova: I encountered an error: {str(e)}. Let me try to recover...\n")
+            except Exception as e:
+                logger.error(f"Error in user input loop: {e}", exc_info=True)
+                print(f"\nNova: I encountered an error: {str(e)}. Let me try to recover...\n")
+                
+    except ImportError:
+        # Fallback to threading approach
+        import queue
+        import threading
+        
+        input_queue = queue.Queue()
+        
+        def read_input():
+            while _user_interface_active.is_set() and not _shutdown_event.is_set():
+                try:
+                    prompt = "You: " if _nova.speaker == "unknown" else f"{_nova.speaker}: "
+                    user_input = input(prompt)
+                    input_queue.put(user_input)
+                except EOFError:
+                    break
+        
+        input_thread = threading.Thread(target=read_input, daemon=True)
+        input_thread.start()
+        
+        while _user_interface_active.is_set() and not _shutdown_event.is_set():
+            try:
+                # Check for input
+                try:
+                    user_input = input_queue.get(timeout=0.1)
+                except queue.Empty:
+                    await asyncio.sleep(0.1)
+                    continue
+                
+                user_input = user_input.strip()
+                if not user_input:
+                    continue
+                
+                # Handle commands (same as above)
+                if user_input.lower() in ['exit', 'quit']:
+                    print("\n[SHUTDOWN] Initiating graceful shutdown...")
+                    await handle_shutdown()
+                    break
+                
+                elif user_input.lower() == 'status':
+                    await show_status()
+                    continue
+                
+                elif user_input.lower() == 'export':
+                    await export_data()
+                    continue
+                
+                elif user_input.lower() == 'help':
+                    show_help()
+                    continue
+                
+                # Regular conversation
+                response = await _nova.chat(user_input)
+                print(f"\nNova: {response}\n")
+                
+            except Exception as e:
+                logger.error(f"Error in user input loop: {e}", exc_info=True)
+                print(f"\nNova: I encountered an error: {str(e)}. Let me try to recover...\n")
 
 async def show_status():
     """Show Nova's current status asynchronously"""

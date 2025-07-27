@@ -383,3 +383,150 @@ AttributeError: 'NovaAgent' object has no attribute '_lock'
 2025-07-27 23:54:55,480 - __main__ - INFO - Background tasks started with error recovery
 2025-07-27 23:54:55,480 - __main__ - INFO - [SUCCESS] Nova is fully operational
 2025-07-27 23:54:55,483 - agent - INFO - Starting autonomous learning cycle
+2025-07-28 00:03:09,047 - agent - INFO - [OK] Vector memory initialized
+2025-07-28 00:03:09,048 - agent - INFO - Loaded 34 memories from brain
+2025-07-28 00:03:09,048 - agent - INFO - [OK] Brain and state loaded
+2025-07-28 00:03:10,511 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-28 00:03:10,519 - agent - INFO - [OK] OpenAI client initialized and tested
+2025-07-28 00:03:10,521 - agent - INFO - [OK] Autonomy and self-modification initialized
+2025-07-28 00:03:10,521 - __main__ - INFO - [STARTUP] Nova startup sequence initiated
+2025-07-28 00:03:10,522 - __main__ - INFO - [OK] Agent initialized successfully
+2025-07-28 00:03:10,522 - __main__ - INFO - [OK] Vector Memory initialized successfully
+2025-07-28 00:03:10,522 - __main__ - INFO - [OK] Autonomy initialized successfully
+2025-07-28 00:03:10,522 - __main__ - INFO - [OK] Self Modifier initialized successfully
+2025-07-28 00:03:10,522 - __main__ - INFO - No pending evolutions found.
+2025-07-28 00:03:10,523 - __main__ - INFO - Background tasks started with error recovery
+2025-07-28 00:03:10,523 - __main__ - INFO - [SUCCESS] Nova is fully operational
+2025-07-28 00:03:10,539 - agent - INFO - Starting autonomous learning cycle
+2025-07-28 00:03:17,575 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-28 00:03:17,924 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 400 Bad Request"
+2025-07-28 00:03:17,925 - core.autonomy - ERROR - Error extracting actionable insights: Error code: 400 - {'error': {'message': "Invalid parameter: 'response_format' of type 'json_object' is not supported with this model.", 'type': 'invalid_request_error', 'param': 'response_format', 'code': None}}
+2025-07-28 00:03:17,962 - __main__ - INFO -    Content: Reflected on 11 memories. Key insight: My programming as a chatbot manifests in a variety of ways. I...
+2025-07-28 00:03:23,524 - __main__ - INFO - Received signal 2
+2025-07-28 00:03:23,525 - __main__ - INFO - Initiating graceful shutdown...
+2025-07-28 00:03:23,527 - __main__ - INFO - Starting orchestrator cleanup...
+2025-07-28 00:03:23,529 - __main__ - INFO - Health monitor cancelled
+2025-07-28 00:03:23,530 - __main__ - INFO - learning_cycle cancelled
+2025-07-28 00:03:23,532 - __main__ - INFO - Autonomy loop cancelled
+2025-07-28 00:03:23,543 - __main__ - INFO - Orchestrator cleanup completed
+2025-07-28 00:03:23,544 - __main__ - INFO - Nova shutdown completed successfully
+2025-07-28 00:03:23,730 - __main__ - INFO - Starting orchestrator cleanup...
+2025-07-28 00:03:23,733 - __main__ - INFO - Orchestrator cleanup completed
+2025-07-28 00:03:23,995 - __main__ - INFO - Process exiting
+2025-07-28 00:03:24,156 - agent - INFO - Shutting down Nova agent...
+2025-07-28 00:03:24,157 - agent - INFO - Nova agent shutdown complete
+2025-07-28 00:10:44,965 - agent - INFO - [OK] Vector memory initialized
+2025-07-28 00:10:44,966 - agent - INFO - Loaded 34 memories from brain
+2025-07-28 00:10:44,967 - agent - INFO - [OK] Brain and state loaded
+2025-07-28 00:10:46,181 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-28 00:10:46,216 - agent - INFO - [OK] OpenAI client initialized and tested
+2025-07-28 00:10:46,230 - agent - INFO - [OK] Autonomy and self-modification initialized
+2025-07-28 00:10:46,230 - __main__ - INFO - [STARTUP] Nova startup sequence initiated
+2025-07-28 00:10:46,231 - __main__ - INFO - [OK] Agent initialized successfully
+2025-07-28 00:10:46,231 - __main__ - INFO - [OK] Vector Memory initialized successfully
+2025-07-28 00:10:46,231 - __main__ - INFO - [OK] Autonomy initialized successfully
+2025-07-28 00:10:46,232 - __main__ - INFO - [OK] Self Modifier initialized successfully
+2025-07-28 00:10:46,232 - __main__ - INFO - No pending evolutions found.
+2025-07-28 00:10:46,232 - __main__ - INFO - Background tasks started with error recovery
+2025-07-28 00:10:46,233 - __main__ - INFO - [SUCCESS] Nova is fully operational
+2025-07-28 00:10:46,350 - agent - INFO - Starting autonomous learning cycle
+2025-07-28 00:10:47,051 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-28 00:10:47,755 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-28 00:10:48,891 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-28 00:10:49,784 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-28 00:10:50,927 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-28 00:10:51,775 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-28 00:10:57,252 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-28 00:10:58,678 - utils.web - ERROR - Brave search error: 429 Client Error: Too Many Requests for url: https://api.search.brave.com/res/v1/web/search?q=2.+Could+you+explain+the+tree-pruning+hypothesis+%28TPH%29+in+more+detail+and+how+it+relates+to+interpretable+and+uninterpretable+features%3F&count=5&search_lang=en&ui_lang=en-US
+2025-07-28 00:10:58,680 - utils.web - WARNING - Brave search failed for: 2. Could you explain the tree-pruning hypothesis (TPH) in more detail and how it relates to interpretable and uninterpretable features?, trying alternatives
+2025-07-28 00:11:10,016 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-28 00:11:10,587 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-07-28 00:11:10,652 - __main__ - INFO - [AUTO] Autonomous Action: explore
+2025-07-28 00:11:10,652 - __main__ - INFO -    Content: Explored Uninterpretable subject with 3 follow-up questions. Discovered: Key Insights: 
+
+1. Research...
+2025-07-28 00:12:31,172 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-28 00:12:31,187 - memory.vector_memory - ERROR - Error storing memory: Expected metadata value to be a str, int, float, bool, or None, got MemoryType.CONVERSATION which is a MemoryType in add.
+2025-07-28 00:12:31,188 - agent - ERROR - Error storing conversation memory: Failed to store memory 7f99a83308dd: Expected metadata value to be a str, int, float, bool, or None, got MemoryType.CONVERSATION which is a MemoryType in add.
+2025-07-28 00:12:32,771 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-28 00:12:35,031 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-28 00:12:36,083 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-28 00:12:36,092 - agent - INFO - Searching for: "Current Bitcoin price"
+2025-07-28 00:12:41,539 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-28 00:12:41,546 - memory.vector_memory - ERROR - Error storing memory: Expected metadata value to be a str, int, float, bool, or None, got MemoryType.WEB_RESULT which is a MemoryType in add.
+2025-07-28 00:12:41,546 - agent - ERROR - Error handling realtime query: Failed to store memory 3839cbe571f0: Expected metadata value to be a str, int, float, bool, or None, got MemoryType.WEB_RESULT which is a MemoryType in add.
+Traceback (most recent call last):
+  File "C:\Users\tessa\Documents\fdv\ai\memory\vector_memory.py", line 152, in store
+    collection.add(
+  File "C:\Users\tessa\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\chromadb\api\models\Collection.py", line 80, in add
+    add_request = self._validate_and_prepare_add_request(
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tessa\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\chromadb\api\models\CollectionCommon.py", line 95, in wrapper
+    return func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tessa\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\chromadb\api\models\CollectionCommon.py", line 219, in _validate_and_prepare_add_request
+    validate_insert_record_set(record_set=add_records)
+  File "C:\Users\tessa\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\chromadb\api\types.py", line 314, in validate_insert_record_set
+    validate_metadatas(record_set["metadatas"])
+  File "C:\Users\tessa\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\chromadb\api\types.py", line 791, in validate_metadatas
+    validate_metadata(metadata)
+  File "C:\Users\tessa\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\chromadb\api\types.py", line 757, in validate_metadata
+    raise ValueError(
+ValueError: Expected metadata value to be a str, int, float, bool, or None, got MemoryType.WEB_RESULT which is a MemoryType in add.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\tessa\Documents\fdv\ai\agent.py", line 581, in handle_realtime_query_async
+    self.vector_memory.store(answer, web_memory.id, MemoryType.WEB_RESULT)
+  File "C:\Users\tessa\Documents\fdv\ai\memory\vector_memory.py", line 169, in store
+    raise MemoryError(f"Failed to store memory {memory_id}: {e}")
+MemoryError: Failed to store memory 3839cbe571f0: Expected metadata value to be a str, int, float, bool, or None, got MemoryType.WEB_RESULT which is a MemoryType in add.
+2025-07-28 00:12:42,072 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2025-07-28 00:12:44,533 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-28 00:12:44,551 - memory.vector_memory - ERROR - Error storing memory: Expected metadata value to be a str, int, float, bool, or None, got MemoryType.RESPONSE which is a MemoryType in add.
+2025-07-28 00:12:44,552 - agent - ERROR - Error storing response memory: Failed to store memory 4ea7a1279334: Expected metadata value to be a str, int, float, bool, or None, got MemoryType.RESPONSE which is a MemoryType in add.
+2025-07-28 00:12:47,261 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-07-28 00:12:47,265 - __main__ - INFO - [AUTO] Autonomous Action: self_evolution
+2025-07-28 00:12:47,266 - __main__ - INFO -    Content: Evolution conditions not met: No specific evolution triggers identified...
+2025-07-28 00:12:59,490 - __main__ - INFO - Received signal 2
+2025-07-28 00:12:59,491 - __main__ - INFO - Initiating graceful shutdown...
+2025-07-28 00:12:59,493 - __main__ - INFO - Starting orchestrator cleanup...
+2025-07-28 00:12:59,495 - __main__ - ERROR - Error in user input loop: 
+Traceback (most recent call last):
+  File "C:\Users\tessa\Documents\fdv\ai\main.py", line 455, in user_input_loop
+    user_input = await aioconsole.ainput(prompt)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tessa\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\aioconsole\stream.py", line 297, in ainput
+    raise EOFError
+EOFError
+2025-07-28 00:12:59,504 - __main__ - INFO - Starting orchestrator cleanup...
+2025-07-28 00:12:59,504 - __main__ - INFO - Health monitor cancelled
+2025-07-28 00:12:59,505 - __main__ - INFO - Autonomy loop cancelled
+2025-07-28 00:12:59,506 - __main__ - INFO - learning_cycle cancelled
+2025-07-28 00:12:59,510 - agent - ERROR - Error saving brain: 'Memory' object has no attribute 'to_dict'
+Traceback (most recent call last):
+  File "C:\Users\tessa\Documents\fdv\ai\agent.py", line 262, in save_brain
+    brain_data = [m.to_dict() for m in self.brain]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tessa\Documents\fdv\ai\agent.py", line 262, in <listcomp>
+    brain_data = [m.to_dict() for m in self.brain]
+                  ^^^^^^^^^
+AttributeError: 'Memory' object has no attribute 'to_dict'
+2025-07-28 00:12:59,513 - __main__ - ERROR - Error saving state during cleanup: Failed to save brain: 'Memory' object has no attribute 'to_dict'
+2025-07-28 00:12:59,513 - __main__ - INFO - Orchestrator cleanup completed
+2025-07-28 00:12:59,514 - __main__ - INFO - Nova shutdown completed successfully
+2025-07-28 00:12:59,517 - agent - ERROR - Error saving brain: 'Memory' object has no attribute 'to_dict'
+Traceback (most recent call last):
+  File "C:\Users\tessa\Documents\fdv\ai\agent.py", line 262, in save_brain
+    brain_data = [m.to_dict() for m in self.brain]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\tessa\Documents\fdv\ai\agent.py", line 262, in <listcomp>
+    brain_data = [m.to_dict() for m in self.brain]
+                  ^^^^^^^^^
+AttributeError: 'Memory' object has no attribute 'to_dict'
+2025-07-28 00:12:59,520 - __main__ - ERROR - Error saving state during cleanup: Failed to save brain: 'Memory' object has no attribute 'to_dict'
+2025-07-28 00:12:59,520 - __main__ - INFO - Orchestrator cleanup completed
+2025-07-28 00:13:00,002 - __main__ - INFO - Process exiting
+2025-07-28 00:13:00,160 - agent - INFO - Shutting down Nova agent...
+2025-07-28 00:13:00,161 - agent - INFO - Nova agent shutdown complete

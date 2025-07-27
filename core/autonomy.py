@@ -1114,11 +1114,25 @@ class NovaAutonomy:
             response = client.chat.completions.create(
                 model="gpt-4",
                 messages=insight_prompt,
-                response_format={"type": "json_object"}
+                # Remove the response_format parameter
+                temperature=0.3
             )
             
-            result = json.loads(response.choices[0].message.content)
-            insights = result if isinstance(result, list) else result.get("insights", [])
+            # Parse JSON from the response text
+            result_text = response.choices[0].message.content
+            # Try to extract JSON from the response
+            import json
+            import re
+            
+            # Try to find JSON in the response
+            json_match = re.search(r'\[.*\]', result_text, re.DOTALL)
+            if json_match:
+                result = json.loads(json_match.group())
+            else:
+                # Fallback
+                result = []
+            
+            insights = result if isinstance(result, list) else []
             
             for insight in insights:
                 if insight.get("priority", 0) > 0.7:
@@ -1128,7 +1142,7 @@ class NovaAutonomy:
                         "development",
                         importance=insight["priority"]
                     )
-            
+        
         except Exception as e:
             logger.error(f"Error extracting actionable insights: {e}")
 
